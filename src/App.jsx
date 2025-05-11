@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import {
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 export default function ArticleUploader() {
   const [articles, setArticles] = useState([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [search, setSearch] = useState('');
+  const [selectedArticle, setSelectedArticle] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('articles');
@@ -27,53 +41,131 @@ export default function ArticleUploader() {
     setContent('');
   };
 
+  const handleDelete = (index) => {
+    const updated = [...articles];
+    updated.splice(index, 1);
+    setArticles(updated);
+  };
+
   const filteredArticles = articles.filter(article =>
     article.title.toLowerCase().includes(search.toLowerCase()) ||
     article.content.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1rem' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', textAlign: 'center' }}>Article Upload Site</h1>
+    <div
+      style={{
+        minHeight: '100vh',
+        width: '100vw',
+        backgroundColor: '#0f172a',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '2rem',
+        boxSizing: 'border-box',
+        overflowX: 'hidden'
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '1080px',
+          backgroundColor: '#ffffff',
+          color: '#1e293b',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          padding: '2rem',
+          boxSizing: 'border-box'
+        }}
+      >
+        <Typography variant="h4" align="center" gutterBottom>
+          Article Upload Site
+        </Typography>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <input
-          type="text"
-          placeholder="Article Title"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          style={{ width: '100%', padding: '0.5rem', marginBottom: '0.5rem' }}
-        />
-        <textarea
-          placeholder="Write your article here (Markdown supported)..."
-          rows={6}
-          value={content}
-          onChange={e => setContent(e.target.value)}
-          style={{ width: '100%', padding: '0.5rem', marginBottom: '0.5rem' }}
-        />
-        <button onClick={handleUpload} style={{ padding: '0.5rem 1rem' }}>Upload Article</button>
-      </div>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <TextField
+            label="Article Title"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="Write your article here (Markdown supported)"
+            value={content}
+            onChange={e => setContent(e.target.value)}
+            multiline
+            rows={6}
+            fullWidth
+            margin="normal"
+          />
+          <Button onClick={handleUpload} variant="contained" color="primary">
+            Upload Article
+          </Button>
+        </div>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <input
-          type="text"
-          placeholder="Search articles..."
+        <TextField
+          label="Search articles..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ width: '100%', padding: '0.5rem' }}
+          fullWidth
+          margin="normal"
         />
-      </div>
 
-      <div>
-        {filteredArticles.map((article, index) => (
-          <div key={index} style={{ border: '1px solid #ccc', padding: '1rem', marginBottom: '1rem' }}>
-            <h2 style={{ fontSize: '20px', marginBottom: '0.5rem' }}>{article.title}</h2>
-            <ReactMarkdown style={{ whiteSpace: 'pre-wrap', marginBottom: '0.5rem' }}>
-              {article.content}
-            </ReactMarkdown>
-            <div style={{ fontSize: '12px', color: 'gray' }}>Uploaded at: {article.timestamp}</div>
-          </div>
-        ))}
+        <div style={{ marginTop: '2rem' }}>
+          {filteredArticles.map((article, index) => (
+            <Card key={index} style={{ marginBottom: '1.5rem' }}>
+              <CardContent>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    style={{ cursor: 'pointer', color: '#1e88e5' }}
+                    onClick={() => {
+                      setSelectedArticle(article);
+                      setOpenDialog(true);
+                    }}
+                  >
+                    {article.title}
+                  </Typography>
+                  <IconButton onClick={() => handleDelete(index)}>
+                    <DeleteIcon color="error" />
+                  </IconButton>
+                </div>
+                <Typography variant="body2" color="textSecondary">
+                  Uploaded at: {article.timestamp}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullScreen>
+          <DialogTitle>{selectedArticle?.title}</DialogTitle>
+          <DialogContent>
+            <ReactMarkdown>{selectedArticle?.content}</ReactMarkdown>
+            <Typography
+              variant="caption"
+              display="block"
+              color="textSecondary"
+              style={{ marginTop: '1rem' }}
+            >
+              Uploaded at: {selectedArticle?.timestamp}
+            </Typography>
+            <Button
+              onClick={() => setOpenDialog(false)}
+              variant="outlined"
+              style={{ marginTop: '1rem' }}
+            >
+              Close
+            </Button>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
